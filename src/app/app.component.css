@@ -1,0 +1,7 @@
+.ui.checkbox label {
+  cursor: pointer;
+}
+
+.ui.grid.container {
+  margin-top: 1em;
+}

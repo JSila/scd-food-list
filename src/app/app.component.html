@@ -1,3 +1,46 @@
-<h1>
-  {{title}}
-</h1>
+<div class="ui container grid">
+  <div class="four wide column">
+    <div class="ui vertical menu">
+      <div class="item">
+        <div class="ui transparent icon input">
+          <input #searchInput type="text" placeholder="Search food..." (input)="onSearch(searchInput.value)" >
+          <i class="search icon"></i>
+        </div>
+      </div>
+      <div class="item">
+        <div class="header">By Category</div>
+        <div class="menu">
+          <div class="ui checkbox item" *ngFor="let item of categories">
+            <input [id]="item.id" (change)="onClick($event.srcElement.id, 'category')" type="checkbox" /> <label [for]="item.id">{{item.label}}</label>
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="header">By Legality</div>
+        <div class="menu">
+          <div class="ui checkbox item" *ngFor="let item of types">
+            <input [id]="item.id" (change)="onClick($event.srcElement.id, 'legality')" type="checkbox" /> <label [for]="item.id">{{item.label}}</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="eight wide column">
+    <table class="ui celled table">
+      <thead>
+      <tr>
+        <th class="five wide">Food name</th>
+        <th class="three wide">Legality</th>
+        <th class="eight wide">Comment</th>
+      </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let f of food">
+          <td>{{f.name}}</td>
+          <td [class.negative]="f.legality == 'illegal'" [class.positive]="f.legality == 'legal'">{{f.legality}}</td>
+          <td>{{f.comment}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
