@@ -2,10 +2,27 @@ import { Component } from '@angular/core';
 import {DataService} from "./data.service";
 
 import * as _ from 'lodash'
+import * as R from 'ramda'
 
-const push = (array, value) => {
-  array.push(value)
+const without = id => R.reject(R.equals(id))
+const toggleListElement = id => R.ifElse(R.contains(id), without(id), R.append(id))
+const nonEmptyValues = (l:Object) => _.reject(_.values(l), _.isEmpty)
+
+const getCriteriasInKeywords = food => {
+  return _.map(this.selected, (keywords, criteria) => _.includes(keywords, food[criteria]))
 }
+
+const filterByFilterable = R.compose(
+  R.equals(nonEmptyValues(this.selected).length),
+  R.sum,
+  getCriteriasInKeywords
+)
+
+const filterByTerm = R.compose(
+  R.contains(this.search.toLowerCase()),
+  R.toLower,
+  R.prop('name')
+)
 
 @Component({
   selector: 'app',
@@ -37,20 +54,16 @@ export class AppComponent {
   }
 
   onClick(id:string, filterBy: string) {
-    if (_.includes(this.selected[filterBy], id)) {
-      _.pull(this.selected[filterBy], id)
-    } else {
-      push(this.selected[filterBy], id)
-    }
+    this.selected = R.evolve({
+      [filterBy]: toggleListElement(id)
+    })(this.selected);
+
     this.filter();
   }
 
   filter() {
-    this.food = _.filter(this.dataService.getFoodList(), food => {
-      let includes: boolean[] = _.map(this.selected, (keywords, criteria) => {
-        return keywords.includes(food[criteria])
-      });
-      return _.sum(includes) === _.reject(_.values(this.selected), _.isEmpty).length
-    }).filter(food => _.includes(_.toLower(food.name), _.toLower(this.search)));
+    this.food = R.filter(
+      R.allPass([filterByFilterable, filterByTerm])
+    )(this.dataService.getFoodList())
   }
 }
