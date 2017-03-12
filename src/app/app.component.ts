@@ -1,28 +1,25 @@
 import { Component } from '@angular/core';
-import {DataService} from "./data.service";
+import { DataService } from "./data.service";
 
-import * as _ from 'lodash'
-import * as R from 'ramda'
+import {Observable} from 'rxjs/Observable'
+import {Subject} from 'rxjs/Subject'
 
-const without = id => R.reject(R.equals(id))
-const toggleListElement = id => R.ifElse(R.contains(id), without(id), R.append(id))
-const nonEmptyValues = (l:Object) => _.reject(_.values(l), _.isEmpty)
-
-const getCriteriasInKeywords = food => {
-  return _.map(this.selected, (keywords, criteria) => _.includes(keywords, food[criteria]))
+type FoodItem = {
+  name:string,
+  category:string,
+  legality:string,
+  comment:string,
 }
 
-const filterByFilterable = R.compose(
-  R.equals(nonEmptyValues(this.selected).length),
-  R.sum,
-  getCriteriasInKeywords
-)
+type Filterable = {
+  id: string,
+  label: string
+}
 
-const filterByTerm = R.compose(
-  R.contains(this.search.toLowerCase()),
-  R.toLower,
-  R.prop('name')
-)
+type Filter = {
+  id: string,
+  by: string
+}
 
 @Component({
   selector: 'app',
@@ -30,40 +27,28 @@ const filterByTerm = R.compose(
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  categories: Object[] = [];
-  types: Object[] = [];
-  food: Object[] = [];
-  selected: Object = {};
+  categories: Filterable[] = []
+  types: Filterable[] = []
 
-  search: string = '';
+  food: Observable<FoodItem[]>
+  term: Subject<string>
+  filterable: Subject<Filter>
 
   constructor(private dataService: DataService) {
-    this.food = dataService.getFoodList();
-    this.categories = dataService.getCategoryList();
-    this.types = dataService.getTypeList();
+    this.categories = dataService.getCategoryList()
+    this.types = dataService.getTypeList()
 
-    this.selected = {
-      category: [],
-      legality: []
-    };
+    this.term = new Subject<string>()
+    this.filterable = new Subject<Filter>()
+
+    this.food = dataService.filter(this.term, this.filterable)
   }
 
   onSearch(term) {
-    this.search = term.trim();
-    this.filter();
+    this.term.next(term)
   }
 
-  onClick(id:string, filterBy: string) {
-    this.selected = R.evolve({
-      [filterBy]: toggleListElement(id)
-    })(this.selected);
-
-    this.filter();
-  }
-
-  filter() {
-    this.food = R.filter(
-      R.allPass([filterByFilterable, filterByTerm])
-    )(this.dataService.getFoodList())
+  onClick(id:string, by: string) {
+    this.filterable.next({id, by})
   }
 }

@@ -6,6 +6,11 @@ import { HttpModule } from '@angular/http';
 import { AppComponent } from './app.component';
 import {DataService} from "./data.service";
 
+import 'rxjs/add/operator/combineLatest'
+import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/scan'
+import 'rxjs/add/operator/startWith'
+
 @NgModule({
   declarations: [
     AppComponent
