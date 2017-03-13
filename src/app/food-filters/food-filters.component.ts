@@ -1,27 +1,24 @@
 import { Component } from '@angular/core';
 import {Subject} from 'rxjs/Subject'
-
-type Filter = {
-  id: string,
-  by: string
-}
+import {DataService} from "../data.service";
 
 @Component({
   selector: 'food-filters',
   templateUrl: './food-filters.component.html',
-  styleUrls: ['./food-filters.component.css'],
-  inputs: ['filterables', 'term', 'filterable']
+  styleUrls: ['./food-filters.component.css']
 })
 export class FoodFiltersComponent {
   filterables: Object[]
-  term: Subject<string>
-  filterable: Subject<Filter>
+
+  constructor(private dataService:DataService) {
+    this.filterables = dataService.filterables
+  }
 
   onSearch(term) {
-    this.term.next(term)
+    this.dataService.term$.next(term)
   }
 
   onClick(id:string, by: string) {
-    this.filterable.next({id, by})
+    this.dataService.filterable$.next({id, by})
   }
 }

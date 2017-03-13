@@ -7,7 +7,7 @@
   </tr>
   </thead>
   <tbody>
-  <tr *ngFor="let f of food | async">
+  <tr *ngFor="let f of food$ | async">
     <td>{{f.name}}</td>
     <td [class.negative]="f.legality == 'illegal'" [class.positive]="f.legality == 'legal'">{{f.legality}}</td>
     <td>{{f.comment}}</td>

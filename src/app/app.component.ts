@@ -1,39 +1,8 @@
 import { Component } from '@angular/core';
-import { DataService } from "./data.service";
-
-import {Observable} from 'rxjs/Observable'
-import {Subject} from 'rxjs/Subject'
-
-type FoodItem = {
-  name:string,
-  category:string,
-  legality:string,
-  comment:string,
-}
-
-type Filter = {
-  id: string,
-  by: string
-}
 
 @Component({
   selector: 'app',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
-  food: Observable<FoodItem[]>
-  term: Subject<string>
-  filterable: Subject<Filter>
-
-  filterables: Object[] = []
-
-  constructor(private dataService: DataService) {
-    this.filterables = dataService.getFilterables()
-
-    this.term = new Subject<string>()
-    this.filterable = new Subject<Filter>()
-
-    this.food = dataService.filter(this.term, this.filterable)
-  }
-}
+export class AppComponent {}

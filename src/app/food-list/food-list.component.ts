@@ -1,5 +1,6 @@
 import {Component} from '@angular/core';
 import {Observable} from 'rxjs/Observable'
+import {DataService} from "../data.service";
 
 type FoodItem = {
   name:string,
@@ -11,11 +12,12 @@ type FoodItem = {
 @Component({
   selector: 'food-list',
   templateUrl: './food-list.component.html',
-  styleUrls: ['./food-list.component.css'],
-  inputs: ['food']
+  styleUrls: ['./food-list.component.css']
 })
 export class FoodListComponent {
-  food: Observable<FoodItem[]>;
+  food$: Observable<FoodItem[]>
 
-  constructor() { }
+  constructor(private dataService:DataService) {
+    this.food$ = dataService.food$
+  }
 }

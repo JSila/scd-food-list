@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {Observable} from 'rxjs/Observable'
 import {Subject} from 'rxjs/Subject'
-import {merge} from 'rxjs/observable/merge'
+import {combineLatest} from 'rxjs/observable/combineLatest'
 
 import * as R from 'ramda'
 import * as _ from 'lodash'
@@ -50,9 +50,13 @@ const applyFiltersToList = R.curry((foodList: FoodItem[], filters: R.Pred[]) => 
 
 @Injectable()
 export class DataService {
-  foodList: FoodItem[] = [];
-  filterables: Object[] = [];
-  selectedFilters: Object = {};
+  foodList: FoodItem[] = []
+  filterables: Object[] = []
+  selectedFilters: Object = {}
+
+  food$: Observable<FoodItem[]>
+  term$: Subject<string>
+  filterable$: Subject<Filter>
 
   constructor() {
     this.foodList = sort(FOOD_LIST, 'name');
@@ -63,13 +67,13 @@ export class DataService {
       R.map((f:any): any[] => [f, []]),
       R.pluck('id')
     )(this.filterables)
+
+    this.term$ = new Subject<string>()
+    this.filterable$ = new Subject<Filter>()
+
+    this.food$ = this.filter()
   }
 
-  getFilterables(): Object[] {
-    return this.filterables
-  }
-
-  // the following two functions returns test function for a food item
   filterByTerm(term: Subject<string>): Observable<FilterFunction> {
     return term.map(createTermFilter)
   }
@@ -80,10 +84,11 @@ export class DataService {
       .map(createFilterableFilter)
   }
 
-  filter(term: Subject<string>, filterable: Subject<Filter>): Observable<FoodItem[]> {
-    return merge(this.filterByTerm(term), this.filterByFilterable(filterable))
-      .combineLatest(collectFilters)
+  filter(): Observable<FoodItem[]> {
+    return combineLatest(
+        this.filterByTerm(this.term$).startWith(p => true),
+        this.filterByFilterable(this.filterable$).startWith(p => true)
+      )
       .map(applyFiltersToList(this.foodList))
-      .startWith(this.foodList)
   }
 }
