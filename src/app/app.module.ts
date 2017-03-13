@@ -4,16 +4,20 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 
 import { AppComponent } from './app.component';
-import {DataService} from "./data.service";
+import { FoodListComponent } from './food-list/food-list.component'
+import { DataService } from "./data.service";
 
 import 'rxjs/add/operator/combineLatest'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/scan'
-import 'rxjs/add/operator/startWith'
+import 'rxjs/add/operator/startWith';
+import { FoodFiltersComponent } from './food-filters/food-filters.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    FoodListComponent,
+    FoodFiltersComponent
   ],
   imports: [
     BrowserModule,

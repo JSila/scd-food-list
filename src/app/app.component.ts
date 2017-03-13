@@ -11,11 +11,6 @@ type FoodItem = {
   comment:string,
 }
 
-type Filterable = {
-  id: string,
-  label: string
-}
-
 type Filter = {
   id: string,
   by: string
@@ -27,28 +22,18 @@ type Filter = {
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  categories: Filterable[] = []
-  types: Filterable[] = []
-
   food: Observable<FoodItem[]>
   term: Subject<string>
   filterable: Subject<Filter>
 
+  filterables: Object[] = []
+
   constructor(private dataService: DataService) {
-    this.categories = dataService.getCategoryList()
-    this.types = dataService.getTypeList()
+    this.filterables = dataService.getFilterables()
 
     this.term = new Subject<string>()
     this.filterable = new Subject<Filter>()
 
     this.food = dataService.filter(this.term, this.filterable)
-  }
-
-  onSearch(term) {
-    this.term.next(term)
-  }
-
-  onClick(id:string, by: string) {
-    this.filterable.next({id, by})
   }
 }

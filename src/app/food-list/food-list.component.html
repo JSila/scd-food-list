@@ -1,0 +1,16 @@
+<table class="ui celled table">
+  <thead>
+  <tr>
+    <th class="five wide">Food name</th>
+    <th class="three wide">Legality</th>
+    <th class="eight wide">Comment</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr *ngFor="let f of food | async">
+    <td>{{f.name}}</td>
+    <td [class.negative]="f.legality == 'illegal'" [class.positive]="f.legality == 'legal'">{{f.legality}}</td>
+    <td>{{f.comment}}</td>
+  </tr>
+  </tbody>
+</table>

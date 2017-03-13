@@ -1,0 +1,16 @@
+<div class="ui vertical menu">
+  <div class="item">
+    <div class="ui transparent icon input">
+      <input #searchInput type="text" placeholder="Search food..." (input)="onSearch(searchInput.value)" >
+      <i class="search icon"></i>
+    </div>
+  </div>
+  <div class="item" *ngFor="let f of filterables">
+    <div class="header">{{f.title}}</div>
+    <div class="menu">
+      <div class="ui checkbox item" *ngFor="let item of f.items">
+        <input [id]="item.id" (change)="onClick($event.srcElement.id, f.id)" type="checkbox" /> <label [for]="item.id">{{item.label}}</label>
+      </div>
+    </div>
+  </div>
+</div>

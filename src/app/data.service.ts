@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-
 import {Observable} from 'rxjs/Observable'
 import {Subject} from 'rxjs/Subject'
 import {merge} from 'rxjs/observable/merge'
@@ -7,16 +6,14 @@ import {merge} from 'rxjs/observable/merge'
 import * as R from 'ramda'
 import * as _ from 'lodash'
 
+import FOOD_LIST from '../assets/food-list'
+import FILTERABLES from '../assets/filterables'
+
 type FoodItem = {
   name:string,
   category:string,
   legality:string,
-  comment:string,
-}
-
-type Filterable = {
-  id: string,
-  label: string
+  comment?:string,
 }
 
 type Filter = {
@@ -35,81 +32,58 @@ const getCriteriasInKeywords = selected => food => {
   return _.map(selected, (keywords, criteria) => _.includes(keywords, food[criteria]))
 }
 
+const createFilterableFilter = selected => R.compose(
+  R.equals(nonEmptyValues(selected).length),
+  R.sum,
+  getCriteriasInKeywords(selected)
+)
+
+const updateSelectedFilters = (selected: Object, filter: Filter) => R.evolve({
+  [filter.by]: toggleListElement(filter.id)
+})(selected)
+
+const createTermFilter = (term: string) => R.compose(R.contains(term), R.toLower, R.prop('name'))
+
+const collectFilters = (...filters) => filters
+
+const applyFiltersToList = R.curry((foodList: FoodItem[], filters: R.Pred[]) => R.filter(R.allPass(filters), foodList))
+
 @Injectable()
 export class DataService {
   foodList: FoodItem[] = [];
-  types: Filterable[] = [];
-  categories: Filterable[] = [];
-  filterables: string[] = [];
-  selected: Object = {};
+  filterables: Object[] = [];
+  selectedFilters: Object = {};
 
   constructor() {
-    this.foodList = sort([
-      {name: 'Apple', category: 'fruits', legality: 'legal', comment: undefined},
-      {name: 'Broccoli', category: 'vegetables', legality: 'legal', comment: undefined},
-      {name: 'Oats', category: 'vegetables', legality: 'illegal', comment: undefined},
-      {name: 'Grapefruit juice', category: 'beverages', legality: 'illegal', comment: "Only legal if fresh. Frozen, or canned grapefruit juice is not allowed. Juice should be diluted with water before drinking."},
-    ], 'name')
+    this.foodList = sort(FOOD_LIST, 'name');
+    this.filterables = sort(FILTERABLES, 'label');
 
-    this.types = sort([
-      {id:'legal', label: 'Legal'},
-      {id:'illegal', label: 'Illegal'}
-    ], 'label')
-
-    this.categories = sort([
-      {id:'vegetables', label: 'Vegetables'},
-      {id:'fruits', label: 'Fruits'},
-      {id:'meats', label: 'Meats'},
-      {id:'beverages', label: 'Beverages'},
-      //...
-    ], 'label')
-
-    this.filterables = ['category', 'legality']
-
-    this.selected = R.compose(
+    this.selectedFilters = R.compose(
       R.fromPairs,
-      R.map((f:any): any[] => {
-        return [f, []]
-      })
+      R.map((f:any): any[] => [f, []]),
+      R.pluck('id')
     )(this.filterables)
   }
 
-  getTypeList(): Filterable[] {
-    return this.types
-  }
-
-  getCategoryList(): Filterable[] {
-    return this.categories
+  getFilterables(): Object[] {
+    return this.filterables
   }
 
   // the following two functions returns test function for a food item
   filterByTerm(term: Subject<string>): Observable<FilterFunction> {
-    return term
-      .map(term => R.compose(R.contains(term), R.toLower, R.prop('name')))
+    return term.map(createTermFilter)
   }
 
   filterByFilterable(filterable: Subject<Filter>): Observable<FilterFunction> {
     return filterable
-      .scan((selected: Object, filter: Filter) => {
-        return R.evolve({
-          [filter.by]: toggleListElement(filter.id)
-        })(selected)
-      }, this.selected)
-      .map(selected => {
-        return R.compose(
-          R.equals(nonEmptyValues(selected).length),
-          R.sum,
-          getCriteriasInKeywords(selected)
-        )
-      })
+      .scan(updateSelectedFilters, this.selectedFilters)
+      .map(createFilterableFilter)
   }
 
   filter(term: Subject<string>, filterable: Subject<Filter>): Observable<FoodItem[]> {
     return merge(this.filterByTerm(term), this.filterByFilterable(filterable))
-      .combineLatest((...filters) => filters)
-      .map(
-        filters => R.filter(R.allPass(filters))(this.foodList)
-      )
+      .combineLatest(collectFilters)
+      .map(applyFiltersToList(this.foodList))
       .startWith(this.foodList)
   }
 }
